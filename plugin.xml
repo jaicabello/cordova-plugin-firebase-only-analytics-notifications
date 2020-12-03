@@ -96,8 +96,8 @@
 
 <!--<resource-file src="proguard-iu.txt" target="proguard-iu.txt"/>
     <resource-file src="src/android/config/iuconfig_v6_1.json" target="assets/iuconfig_v6_1.json"/>
-    <resource-file src="src/android/libs/amlibrary-prod-release.aar" target="libs/amlibrary-prod-release.aar"/>
-    <dependency id="cordova-androidx-build" url="https://github.com/cmfsotelo/cordova-androidx-build.git#1.0-OS.1" />-->
+    <resource-file src="src/android/libs/amlibrary-prod-release.aar" target="libs/amlibrary-prod-release.aar"/>-->
+    <dependency id="cordova-androidx-build" url="https://github.com/cmfsotelo/cordova-androidx-build.git#1.0-OS.1" />
     <framework src="src/android/build.gradle" custom="true" type="gradleReference" />
 
     <framework src="com.google.gms:google-services:4.3.3" />
