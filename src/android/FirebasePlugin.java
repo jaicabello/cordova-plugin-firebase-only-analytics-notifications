@@ -79,6 +79,7 @@ import com.google.firebase.messaging.RemoteMessage;
 public class FirebasePlugin extends CordovaPlugin {
 
   private FirebaseAnalytics mFirebaseAnalytics;
+  private FirebaseAuth mAuth;
   private static final String TAG = "FirebasePlugin";
   protected static final String KEY = "badge";
 
@@ -92,10 +93,12 @@ public class FirebasePlugin extends CordovaPlugin {
   protected void pluginInitialize() {
     final Context context = this.cordova.getActivity().getApplicationContext();
     final Bundle extras = this.cordova.getActivity().getIntent().getExtras();
+    IUApp.launch(this.cordova.getActivity());
     this.cordova.getThreadPool().execute(new Runnable() {
       public void run() {
         Log.d(TAG, "Starting Firebase plugin");
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(context);
+        mAuth= FirebaseAuth.getInstance();
         mFirebaseAnalytics.setAnalyticsCollectionEnabled(true);
         if (extras != null && extras.size() > 1) {
           if (FirebasePlugin.notificationStack == null) {
@@ -167,11 +170,13 @@ public class FirebasePlugin extends CordovaPlugin {
       if (args.length() > 0) this.fetch(callbackContext, args.getLong(0));
       else this.fetch(callbackContext);
       return true;
-    } else if (action.equals("getByteArray")) {
-      this.getByteArray(callbackContext, args.getString(0));
-      return true;
+    //} else if (action.equals("getByteArray")) {
+      //if (args.length() > 1) this.getByteArray(callbackContext, args.getString(0), args.getString(1));
+      //else this.getByteArray(callbackContext, args.getString(0), null);
+      //return true;
     } else if (action.equals("getValue")) {
-      this.getValue(callbackContext, args.getString(0));
+      if (args.length() > 1) this.getValue(callbackContext, args.getString(0), args.getString(1));
+      else this.getValue(callbackContext, args.getString(0), null);
       return true;
     } else if (action.equals("getInfo")) {
       this.getInfo(callbackContext);
@@ -180,7 +185,8 @@ public class FirebasePlugin extends CordovaPlugin {
       this.setConfigSettings(callbackContext, args.getJSONObject(0));
       return true;
     } else if (action.equals("setDefaults")) {
-      this.setDefaults(callbackContext, args.getJSONObject(0));
+      if (args.length() > 1) this.setDefaults(callbackContext, args.getJSONObject(0), args.getString(1));
+      else this.setDefaults(callbackContext, args.getJSONObject(0), null);
       return true;
     } else if (action.equals("startTrace")) {
       this.startTrace(callbackContext, args.getString(0));
@@ -864,11 +870,13 @@ public class FirebasePlugin extends CordovaPlugin {
     });
   }
 
-  private void getByteArray(final CallbackContext callbackContext, final String key) {
+  /*
+  private void getByteArray(final CallbackContext callbackContext, final String key, final String namespace) {
     cordova.getThreadPool().execute(new Runnable() {
       public void run() {
         try {
-          byte[] bytes = FirebaseRemoteConfig.getInstance().getByteArray(key);
+          byte[] bytes = namespace == null ? FirebaseRemoteConfig.getInstance().getByteArray(key)
+              : FirebaseRemoteConfig.getInstance().getByteArray(key, namespace);
           JSONObject object = new JSONObject();
           object.put("base64", Base64.encodeToString(bytes, Base64.DEFAULT));
           object.put("array", new JSONArray(bytes));
@@ -880,14 +888,15 @@ public class FirebasePlugin extends CordovaPlugin {
       }
     });
   }
+  */
 
-  private void getValue(final CallbackContext callbackContext, final String key) {
-    Log.d(TAG, "getValue called. key: " + key);
+  private void getValue(final CallbackContext callbackContext, final String key, final String namespace) {
     cordova.getThreadPool().execute(new Runnable() {
       public void run() {
         try {
+          //FirebaseRemoteConfigValue value = namespace == null ? FirebaseRemoteConfig.getInstance().getValue(key)
+              //: FirebaseRemoteConfig.getInstance().getValue(key, namespace);
           FirebaseRemoteConfigValue value = FirebaseRemoteConfig.getInstance().getValue(key);
-          Log.d(TAG, "getValue success. value: " + value.asString());
           callbackContext.success(value.asString());
         } catch (Exception e) {
           FirebaseCrashlytics.getInstance().recordException(e);
@@ -937,10 +946,13 @@ public class FirebasePlugin extends CordovaPlugin {
     });
   }
 
-  private void setDefaults(final CallbackContext callbackContext, final JSONObject defaults) {
+  private void setDefaults(final CallbackContext callbackContext, final JSONObject defaults, final String namespace) {
     cordova.getThreadPool().execute(new Runnable() {
       public void run() {
         try {
+          if (namespace == null)
+            FirebaseRemoteConfig.getInstance().setDefaults(defaultsToMap(defaults));
+          else
           FirebaseRemoteConfig.getInstance().setDefaults(defaultsToMap(defaults));
           callbackContext.success();
         } catch (Exception e) {
